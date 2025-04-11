@@ -1,13 +1,13 @@
 Package: praatpicture
 Title: 'Praat Picture' Style Plots of Acoustic Data
-Version: 1.2.0
+Version: 1.4.3
 Authors@R: 
     person("Rasmus", "Puggaard-Rode", 
     email = "r.puggaard@phonetik.uni-muenchen.de", 
     role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0003-4522-9987"))
 Description: Quickly and easily generate plots of acoustic data aligned with transcriptions similar to those made in 'Praat' using either derived signals generated directly in R with 'wrassp' or imported derived signals from 'Praat'. Provides easy and fast out-of-the-box solutions but also a high extent of  flexibility. Also provides options for embedding audio in figures and animating figures.
-License: MIT + file LICENSE
+License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
@@ -29,6 +29,7 @@ Imports:
     soundgen (>= 2.6.2),
     tuneR (>= 1.4.6),
     utils (>= 4.3.2),
-    wrassp (>= 1.0.4)
+    wrassp (>= 1.0.4),
+    zoo (>= 1.8-12)
 URL: https://github.com/rpuggaardrode/praatpicture
 BugReports: https://github.com/rpuggaardrode/praatpicture/issues

@@ -9,14 +9,20 @@ praatpicture(
   start = 0,
   end = 0,
   tfrom0 = TRUE,
+  tUnit = "s",
   frames = c("sound", "spectrogram", "TextGrid"),
   proportion = c(30, 50, 20),
   mainTitle = "",
+  mainTitleAlignment = 0,
   start_end_only = TRUE,
   min_max_only = TRUE,
+  drawSize = 1,
+  speckleSize = 1,
   wave_channels = "all",
   wave_channelNames = FALSE,
   wave_color = "black",
+  wave_lineWidth = 1,
+  wave_highlight = NULL,
   tg_obj = NULL,
   tg_file = NULL,
   tg_tiers = "all",
@@ -25,8 +31,10 @@ praatpicture(
   tg_focusTierLineType = "dotted",
   tg_tierNames = TRUE,
   tg_alignment = "central",
+  tg_edgeLabels = "keep",
   tg_specialChar = FALSE,
   tg_color = "black",
+  tg_highlight = NULL,
   spec_channel = NULL,
   spec_freqRange = c(0, 5000),
   spec_windowLength = 0.005,
@@ -35,6 +43,7 @@ praatpicture(
   spec_windowShape = "Gaussian",
   spec_colors = c("white", "black"),
   spec_axisLabel = "Frequency (Hz)",
+  spec_highlight = NULL,
   pitch_timeStep = NULL,
   pitch_floor = 75,
   pitch_ceiling = 600,
@@ -46,16 +55,19 @@ praatpicture(
   pitch_plotOnSpec = FALSE,
   pitch_ssff = NULL,
   pitch_axisLabel = NULL,
+  pitch_highlight = NULL,
   formant_timeStep = NULL,
   formant_maxN = 5,
   formant_windowLength = 0.025,
   formant_dynamicRange = 30,
   formant_freqRange = c(50, 5500),
+  formant_number = NULL,
   formant_plotType = "speckle",
   formant_color = "black",
   formant_plotOnSpec = FALSE,
   formant_ssff = NULL,
   formant_axisLabel = "Frequency (Hz)",
+  formant_highlight = NULL,
   intensity_timeStep = NULL,
   intensity_minPitch = 100,
   intensity_range = NULL,
@@ -63,7 +75,9 @@ praatpicture(
   intensity_plotOnSpec = FALSE,
   intensity_ssff = NULL,
   intensity_axisLabel = "Intensity (dB)",
-  time_axisLabel = "Time (s)",
+  intensity_highlight = NULL,
+  time_axisLabel = NULL,
+  highlight = NULL,
   draw_lines = list("formant", h = seq(0, 10000, by = 1000), lty = "dotted"),
   draw_rectangle = NULL,
   draw_arrow = NULL,
@@ -84,6 +98,9 @@ extension.}
 \item{tfrom0}{Logical; should time on the x-axis run from 0 or from the
 original time? Default is \code{TRUE}.}
 
+\item{tUnit}{String giving the unit of time to print along the x-axis.
+Possible options are \code{'s'} (default) for seconds and \code{'ms'} for milliseconds.}
+
 \item{frames}{String or vector of strings giving the frames that the plot
 should consist of. Default is \code{sound}, \code{spectrogram}, \code{TextGrid}. This
 requires a file with the extension \code{.TextGrid} and the same base name as the
@@ -96,8 +113,13 @@ individual frames. Default is \code{c(30,50,20)}. If more or less than three
 frames are plotted and no proportions are given, frames will be of equal
 size.}
 
-\item{mainTitle}{String giving a title to print at the top left.
+\item{mainTitle}{String giving a title to print at the top of the plot.
 The default is an empty string, i.e. no title.}
+
+\item{mainTitleAlignment}{Number indicating the vertical alignment of the
+plot title, where \code{0} (default) indicates left-alignment, \code{1} indicates
+right-alignment, \code{0.5} indicates central alignment, etc, following the
+conventions of the \code{adj} argument of \link[graphics:mtext]{graphics::mtext}.}
 
 \item{start_end_only}{Logical; should there only be ticks on the x-axis
 for start and end times? Default is \code{TRUE}.}
@@ -106,6 +128,15 @@ for start and end times? Default is \code{TRUE}.}
 on the y-axis? Default is \code{TRUE}. Can also be a logical vector if some but
 not all plot components should have minimum and maximum values on the y-axis.
 Ignored for TextGrid component.}
+
+\item{drawSize}{Number indicating the line width of plot components where
+the \verb{_plotType} is \code{'draw'} (i.e., pitch, formants, or intensity rendered as
+line plots). Default is \code{1}. Controls the \code{lwd} argument of
+\link[graphics:lines]{graphics::lines}.}
+
+\item{speckleSize}{Number indicating the point size of plot components where
+the \verb{_plotType} is \code{'speckle'} (i.e. pitch or formants rendered as point
+plots). Default is \code{1}. Controls the \code{cex} arguments of \link[graphics:points]{graphics::points}.}
 
 \item{wave_channels}{Vector of numbers or strings giving either numeric
 identifiers of audio channels to plot of the names of audio channels to plot.
@@ -121,6 +152,18 @@ a vector of strings can be provided with channel names. Default is \code{FALSE}.
 \item{wave_color}{String giving the name of the color to be used for plotting
 the waveform. Default is \code{'black'}. Alternatively a vector of strings, if
 different colors should be used for different channels.}
+
+\item{wave_lineWidth}{Number giving the line width to use for plotting
+the waveform. Default is \code{1}.}
+
+\item{wave_highlight}{Named list giving parameters for differential
+highlighting of the waveform based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the argument
+\code{color} (string, see \code{wave_color}), and \code{background}
+(a string specifying a background color).}
 
 \item{tg_obj}{A TextGrid object returned by the \code{\link[=make_TextGrid]{make_TextGrid()}} function.}
 
@@ -158,6 +201,12 @@ y-axis? Default is \code{TRUE}.}
 TextGrids. Default is \code{central}; other options are \code{left} and \code{right}.
 Alternatively, a vector of strings if different alignments are needed.}
 
+\item{tg_edgeLabels}{String specifying how to handle TextGrid labels in
+interval tiers that fall partially before \code{start} or partially after \code{end}.
+Default is \code{'keep'}, where labels are kept at the center of the interval.
+Other options are \code{'center'}, where labels are recentered to the visible
+part of the interval, or \code{'discard'}, where such labels are ignored.}
+
 \item{tg_specialChar}{Logical; should Praat typesetting for special font types
 such as italic, bold, and small caps be converted into corresponding
 R-readable special font types. Default is \code{FALSE}, since special characters
@@ -167,6 +216,13 @@ See https://www.fon.hum.uva.nl/praat/manual/Text_styles.html.}
 \item{tg_color}{String or vector of strings giving the name of the color(s)
 to be used for the text in TextGrids. Default is \code{'black'}. If a vector is
 provided, different colors are used for different tiers.}
+
+\item{tg_highlight}{Named list giving parameters for differential
+highlighting of TextGrid intervals. This list
+should contain information about which intervals to highlight, using the
+\code{tier} and \code{label}. Further contains the argument
+\code{color}, and \code{background}
+(a string specifying a background color).}
 
 \item{spec_channel}{Numeric giving the channel that should be used to
 generate the spectrogram. Default is \code{1}. Generating spectrograms from
@@ -187,7 +243,13 @@ Default is \code{1000}.}
 
 \item{spec_windowShape}{String giving the name of the window shape to be
 applied to the signal when generating spectrograms. Default is \code{Gaussian};
-other options are \code{square}, \code{Hamming}, \code{Bartlett}, or \code{Hanning}.}
+other options are \code{square}, \code{Hamming}, \code{Bartlett}, \code{Hanning}, or \code{Blackman}.
+Note that the Gaussian window function provided by the \code{phonTools} package
+and used in \code{praatpicture()} does not have the same properties as the
+Gaussian window function used for spectral estimation in Praat; plotting
+a simple sine wave with high dynamic range will produce sidelobes in
+\code{praatpicture()} but not in Praat. It's recommended to use Blackman windows
+instead if you have this problem.}
 
 \item{spec_colors}{Vector of strings giving the names of colors to be used
 for plotting the spectrogram; default is \code{c('white', 'black')}. The first
@@ -197,6 +259,14 @@ names can be used for plotting values in between in different colors.}
 
 \item{spec_axisLabel}{String giving the name of the label to print along the
 y-axis when plotting a spectrogram. Default is \code{Frequency (Hz)}.}
+
+\item{spec_highlight}{Named list giving parameters for differential
+highlighting of the spectrogram based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the argument
+\code{colors} (vector of strings, see \code{spec_colors}).}
 
 \item{pitch_timeStep}{Measurement interval in seconds for tracking pitch.
 Default is \code{NULL}, in which case the measurement interval is equal to
@@ -243,6 +313,16 @@ y-axis when printing a pitch track. Default is \code{NULL}, in which case the
 axis label will depend on the scale. If \code{pitch_plotOnSpec=TRUE}, this label
 will be printed on the right-hand y-axis label.}
 
+\item{pitch_highlight}{Named list giving parameters for differential
+highlighting of pitch based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the optional arguments
+\code{color} (string or vector of strings, see \code{pitch_color}),
+\code{drawSize} or \code{speckleSize} (both numeric), and \code{background}
+(a string specifying a background color).}
+
 \item{formant_timeStep}{Measurement interval in seconds for tracking formants.
 Default is \code{NULL}, in which case the measurement interval is equal to
 \code{formant_windowLength} / 4.}
@@ -261,6 +341,9 @@ intensity. Default is \code{30}. If set to \code{0}, all formants are shown.}
 
 \item{formant_freqRange}{Vector of two integers giving the frequency range to
 be used for producing formant plots. Default is \code{c(0,5500)}.}
+
+\item{formant_number}{Number of formants to plot. Default is \code{NULL}, in
+which case all available formants are plotted.}
 
 \item{formant_plotType}{String giving the type of formant plot to produce;
 default is \code{speckle} (a point plot), the only other option is \code{draw} (a line
@@ -286,6 +369,16 @@ Default is \code{NULL}.}
 
 \item{formant_axisLabel}{String giving the name of the label to print along the
 y-axis when plotting formants. Default is \code{Frequency (Hz)}.}
+
+\item{formant_highlight}{Named list giving parameters for differential
+highlighting of formants based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the optional arguments
+\code{color} (string or vector of strings, see \code{formant_color}),
+\code{drawSize} or \code{speckleSize} (both numeric), and \code{background}
+(a string specifying a background color).}
 
 \item{intensity_timeStep}{Measurement interval in seconds for tracking
 intensity. Default is \code{NULL}, in which case the measurement interval is
@@ -315,8 +408,30 @@ the y-axis when plotting intensity. Default is \code{Intensity (dB)}.
 If \code{intensity_plotOnSpec=TRUE}, this label
 will be printed on the right-hand y-axis label.}
 
+\item{intensity_highlight}{Named list giving parameters for differential
+highlighting of the intensity contour based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the optional arguments
+\code{color} (string or vector of strings, see \code{intensity_color}) and
+\code{drawSize} (integer), and \code{background}
+(a string specifying a background color).}
+
 \item{time_axisLabel}{String giving the name of the label to print along
-the x-axis. Default is \code{Time (s)}.}
+the x-axis. Default is \code{NULL}, in which case \code{Time (s)} is printed if
+\code{tUnit = 's'} and \code{Time (ms)} is printed if \code{tUnit = 'ms'}.}
+
+\item{highlight}{Named list giving parameters for differential highlighting
+of part of the plot based on the time domain. This list should contain
+information about which parts of the plot to highlight, either done with the
+\code{start} and \code{end} arguments which must be numbers or numeric vectors, or
+using the \code{tier} and \code{label} arguments to highlight based on information in
+a plotted TextGrid. Further contains the optional arguments \code{color}
+(a string), \code{drawSize} and \code{speckleSize} (both numeric), and \code{background}
+(a string specifying a background color). This argument is
+used to highlight all plot components, use the \verb{*_highlight} arguments for
+highlighting individuals plot components.}
 
 \item{draw_lines}{Use for drawing straight lines on plot components. Takes
 an argument of type \code{list} which should contain a) a string giving the plot
@@ -373,8 +488,8 @@ When available, pitch, formant, and intensity tracks are loaded
 from Praat files with the same base name as \code{sound}; i.e., if your sound
 file is called \verb{1.wav} and there is a Praat file called \verb{1.Formant} in the
 same directory, this file is used for plotting formants. Pitch files should
-have the \code{PitchTier} extension, and intensity files should have the
-\code{IntensityTier} extension.
+have either the \code{PitchTier} or \code{Pitch} extension, and intensity files should
+have the \code{IntensityTier} extension.
 
 If no such files are available, the signal processing tools in the \code{wrassp}
 package are used; pitch is tracked with the function \link[wrassp:ksvF0]{wrassp::ksvF0},

@@ -24,8 +24,10 @@ waveplot(
   draw_arrow = NULL,
   annotate = NULL,
   channelNames = FALSE,
+  lineWidth = 1,
   cn = NULL,
-  min_max_only = TRUE
+  min_max_only = TRUE,
+  highlight = NULL
 )
 }
 \arguments{
@@ -87,6 +89,9 @@ annotate. Default is \code{NULL}.}
 \item{channelNames}{Logical; should names of audio channels be printed on
 the y-axis? Default is \code{FALSE}.}
 
+\item{lineWidth}{Number giving the line width to use for plotting
+the waveform. Default is \code{1}.}
+
 \item{cn}{Vector of strings with channel names to be printed on the y-axis
 if \code{channelNames} is \code{TRUE}.}
 
@@ -94,6 +99,15 @@ if \code{channelNames} is \code{TRUE}.}
 on the y-axis? Default is \code{TRUE}. Can also be a logical vector if some but
 not all plot components should have minimum and maximum values on the y-axis.
 Ignored for TextGrid component.}
+
+\item{highlight}{Named list giving parameters for differential
+highlighting of the waveform based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the argument
+\code{color} (string, see \code{color}), and \code{background}
+(a string specifying a background color).}
 }
 \value{
 No return values, called internally by \link{praatpicture} and sibling

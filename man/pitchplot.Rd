@@ -20,7 +20,10 @@ pitchplot(
   color = "black",
   ind = NULL,
   min_max_only = TRUE,
-  axisLabel = NULL
+  highlight = NULL,
+  axisLabel = NULL,
+  drawSize = 1,
+  speckleSize = 1
 )
 }
 \arguments{
@@ -78,9 +81,27 @@ on the y-axis? Default is \code{TRUE}. Can also be a logical vector if some but
 not all plot components should have minimum and maximum values on the y-axis.
 Ignored for TextGrid component.}
 
+\item{highlight}{Named list giving parameters for differential
+highlighting of pitch based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the optional arguments
+\code{color} (string or vector of strings, see \code{color}),
+\code{drawSize} or \code{speckleSize} (both numeric), and \code{background}
+(a string specifying a background color).}
+
 \item{axisLabel}{String giving the name of the label to print along the
 y-axis when printing a pitch track. Default is \code{NULL}, in which case the
 axis label will depend on the scale.}
+
+\item{drawSize}{Number indicating the line width if
+\code{plotType} is \code{'draw'}. Default is \code{1}. Controls the \code{lwd} argument of
+\link[graphics:lines]{graphics::lines}.}
+
+\item{speckleSize}{Number indicating the point size of if \verb{_plotType} is
+\code{'speckle'}. Default is \code{1}. Controls the \code{cex} arguments of
+\link[graphics:points]{graphics::points}.}
 }
 \value{
 No return values, called internally by \link{praatpicture} and sibling

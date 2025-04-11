@@ -1,3 +1,5 @@
+options(shiny.maxRequestSize=50*1024^2)
+
 server <- function(input, output, session) {
 
   curDev <- grDevices::dev.cur()
@@ -8,10 +10,12 @@ server <- function(input, output, session) {
       shinyjs::show('wave_color')
       shinyjs::show('wave_channels')
       shinyjs::show('wave_channelNames')
+      shinyjs::show('wave_lineWidth')
     } else {
       shinyjs::hide('wave_color')
       shinyjs::hide('wave_channels')
       shinyjs::hide('wave_channelNames')
+      shinyjs::hide('wave_lineWidth')
     }
 
     if ('TextGrid' %in% input$frames) {
@@ -100,6 +104,7 @@ server <- function(input, output, session) {
       shinyjs::show('formant_maxN')
       shinyjs::show('formant_color')
       shinyjs::show('formant_axisLabel')
+      shinyjs::show('formant_number')
     } else {
       shinyjs::hide('formant_plotType')
       shinyjs::hide('formant_freqRangeMin')
@@ -110,6 +115,7 @@ server <- function(input, output, session) {
       shinyjs::hide('formant_maxN')
       shinyjs::hide('formant_color')
       shinyjs::hide('formant_axisLabel')
+      shinyjs::hide('formant_number')
     }
 
     if ('intensity' %in% input$frames) {
@@ -166,6 +172,7 @@ server <- function(input, output, session) {
       shinyjs::show('formant_maxN')
       shinyjs::show('formant_color')
       shinyjs::show('formant_axisLabel')
+      shinyjs::show('formant_number')
     } else {
       shinyjs::hide('formant_plotType')
       shinyjs::hide('formant_freqRangeMin')
@@ -176,6 +183,7 @@ server <- function(input, output, session) {
       shinyjs::hide('formant_maxN')
       shinyjs::hide('formant_color')
       shinyjs::hide('formant_axisLabel')
+      shinyjs::hide('formant_number')
     }
   })
 
@@ -253,6 +261,16 @@ server <- function(input, output, session) {
     }
   })
 
+  observeEvent(input$tUnit, {
+    if (input$tUnit == 'ms') {
+      updateTextInput(inputId = 'time_axisLabel',
+                      value = 'Time (ms)')
+    } else if (input$tUnit == 's') {
+      updateTextInput(inputId = 'time_axisLabel',
+                      value = 'Time (s)')
+    }
+  })
+
   observeEvent(input$pitch_scale, {
     if (input$pitch_scale == 'semitones') {
       shinyjs::show('pitch_semitonesRe')
@@ -292,6 +310,12 @@ server <- function(input, output, session) {
                        value = 0.25 * input$formant_windowLength)
   })
 
+  observeEvent(input$formant_maxN, {
+    updateNumericInput(inputId = 'formant_number',
+                       value = input$formant_maxN,
+                       max = input$formant_maxN)
+  })
+
   intensity_range <- reactive({
     if (is.na(input$intensity_rangeMin) & is.na(input$intensity_rangeMax)) {
       NULL
@@ -315,6 +339,38 @@ server <- function(input, output, session) {
   observeEvent(input$bgColor, {
     updateTextInput(inputId = 'spec_colors',
                     value = paste(input$bgColor, input$globalColor, sep=','))
+  })
+
+  observeEvent(input$highlightBool, {
+    if(input$highlightBool) {
+      shinyjs::show('highlightComp')
+      shinyjs::show('highlightStart')
+      shinyjs::show('highlightEnd')
+      shinyjs::show('highlightCol')
+      shinyjs::show('highlightBG')
+      shinyjs::show('highlightTGbool')
+      shinyjs::show('highlightDrawSize')
+      shinyjs::show('highlightSpeckleSize')
+    } else {
+      shinyjs::hide('highlightComp')
+      shinyjs::hide('highlightStart')
+      shinyjs::hide('highlightEnd')
+      shinyjs::hide('highlightCol')
+      shinyjs::hide('highlightBG')
+      shinyjs::hide('highlightTGbool')
+      shinyjs::hide('highlightDrawSize')
+      shinyjs::hide('highlightSpeckleSize')
+    }
+  })
+
+  observeEvent(input$highlightTGbool, {
+    if (input$highlightTGbool) {
+      shinyjs::show('highlightTier')
+      shinyjs::show('highlightLabel')
+    } else {
+      shinyjs::hide('highlightTier')
+      shinyjs::hide('highlightLabel')
+    }
   })
 
   observeEvent(input$arrowBool, {
@@ -384,6 +440,122 @@ server <- function(input, output, session) {
       shinyjs::hide('annotColor')
       shinyjs::hide('annotFace')
       shinyjs::hide('annotSize')
+    }
+  })
+
+  highlight_args <- reactive({
+    if (!input$highlightBool | input$highlightComp != 'all') {
+      return(NULL)
+    } else {
+      tmp <- list()
+      tmp$start <- as.numeric(unlist(strsplit(input$highlightStart, ',')))
+      tmp$end <- as.numeric(unlist(strsplit(input$highlightEnd, ',')))
+      if (input$highlightTier != '') {
+        tmp$tier <- input$highlightTier
+        tmp$label <- input$highlightLabel
+      }
+      tmp$color <- unlist(strsplit(input$highlightCol, ','))
+      tmp$background <- input$highlightBG
+      tmp$drawSize <- as.numeric(
+        unlist(strsplit(input$highlightDrawSize, ',')))
+      tmp$speckleSize <- as.numeric(
+        unlist(strsplit(input$highlightSpeckleSize, ',')))
+      return(tmp)
+    }
+  })
+
+  waveHighlight_args <- reactive({
+    if (!input$highlightBool | input$highlightComp != 'wave') {
+      return(NULL)
+    } else {
+      tmp <- list()
+      tmp$start <- as.numeric(unlist(strsplit(input$highlightStart, ',')))
+      tmp$end <- as.numeric(unlist(strsplit(input$highlightEnd, ',')))
+      if (input$highlightTier != '') {
+        tmp$tier <- input$highlightTier
+        tmp$label <- input$highlightLabel
+      }
+      tmp$color <- unlist(strsplit(input$highlightCol, ','))
+      tmp$background <- input$highlightBG
+      return(tmp)
+    }
+  })
+
+  specHighlight_args <- reactive({
+    if (!input$highlightBool | input$highlightComp != 'spectrogram') {
+      return(NULL)
+    } else {
+      tmp <- list()
+      tmp$start <- as.numeric(unlist(strsplit(input$highlightStart, ',')))
+      tmp$end <- as.numeric(unlist(strsplit(input$highlightEnd, ',')))
+      if (input$highlightTier != '') {
+        tmp$tier <- input$highlightTier
+        tmp$label <- input$highlightLabel
+      }
+      tmp$colors <- unlist(strsplit(input$highlightCol, ','))
+      tmp$background <- input$highlightBG
+      return(tmp)
+    }
+  })
+
+  pitchHighlight_args <- reactive({
+    if (!input$highlightBool | input$highlightComp != 'pitch') {
+      return(NULL)
+    } else {
+      tmp <- list()
+      tmp$start <- as.numeric(unlist(strsplit(input$highlightStart, ',')))
+      tmp$end <- as.numeric(unlist(strsplit(input$highlightEnd, ',')))
+      if (input$highlightTier != '') {
+        tmp$tier <- input$highlightTier
+        tmp$label <- input$highlightLabel
+      }
+      tmp$color <- unlist(strsplit(input$highlightCol, ','))
+      tmp$background <- input$highlightBG
+      tmp$drawSize <- as.numeric(
+        unlist(strsplit(input$highlightDrawSize, ',')))
+      tmp$speckleSize <- as.numeric(
+        unlist(strsplit(input$highlightSpeckleSize, ',')))
+      return(tmp)
+    }
+  })
+
+  formantHighlight_args <- reactive({
+    if (!input$highlightBool | input$highlightComp != 'formant') {
+      return(NULL)
+    } else {
+      tmp <- list()
+      tmp$start <- as.numeric(unlist(strsplit(input$highlightStart, ',')))
+      tmp$end <- as.numeric(unlist(strsplit(input$highlightEnd, ',')))
+      if (input$highlightTier != '') {
+        tmp$tier <- input$highlightTier
+        tmp$label <- input$highlightLabel
+      }
+      tmp$color <- unlist(strsplit(input$highlightCol, ','))
+      tmp$background <- input$highlightBG
+      tmp$drawSize <- as.numeric(
+        unlist(strsplit(input$highlightDrawSize, ',')))
+      tmp$speckleSize <- as.numeric(
+        unlist(strsplit(input$highlightSpeckleSize, ',')))
+      return(tmp)
+    }
+  })
+
+  intensityHighlight_args <- reactive({
+    if (!input$highlightBool | input$highlightComp != 'intensity') {
+      return(NULL)
+    } else {
+      tmp <- list()
+      tmp$start <- as.numeric(unlist(strsplit(input$highlightStart, ',')))
+      tmp$end <- as.numeric(unlist(strsplit(input$highlightEnd, ',')))
+      if (input$highlightTier != '') {
+        tmp$tier <- input$highlightTier
+        tmp$label <- input$highlightLabel
+      }
+      tmp$color <- unlist(strsplit(input$highlightCol, ','))
+      tmp$background <- input$highlightBG
+      tmp$drawSize <- as.numeric(
+        unlist(strsplit(input$highlightDrawSize, ',')))
+      return(tmp)
     }
   })
 
@@ -505,17 +677,23 @@ server <- function(input, output, session) {
                                start = as.numeric(input$start),
                                end = as.numeric(input$end),
                                tfrom0 = input$tfrom0,
+                               tUnit = input$tUnit,
                                frames = input$frames,
                                proportion = as.numeric(unlist(strsplit(
                                  input$proportion, ','
                                ))),
                                mainTitle = input$mainTitle,
+                               mainTitleAlignment = input$mainTitleAlignment,
                                start_end_only = input$start_end_only,
                                min_max_only = input$min_max_only,
                                time_axisLabel = input$time_axisLabel,
+                               speckleSize = input$speckleSize,
+                               drawSize = input$drawSize,
                                wave_color = input$wave_color,
                                wave_channels = wave_channels(),
                                wave_channelNames = channelNames(),
+                               wave_lineWidth = input$wave_lineWidth,
+                               wave_highlight = waveHighlight_args(),
                                tg_file = input$tg_file$datapath,
                                tg_tiers = tg_tiers(),
                                tg_focusTier = tg_focusTier(),
@@ -543,6 +721,7 @@ server <- function(input, output, session) {
                                  input$spec_colors, ',')),
                                spec_axisLabel = input$spec_axisLabel,
                                spec_channel = spec_channel(),
+                               spec_highlight = specHighlight_args(),
                                pitch_plotType = input$pitch_plotType,
                                pitch_scale = input$pitch_scale,
                                pitch_semitonesRe = input$pitch_semitonesRe,
@@ -556,6 +735,7 @@ server <- function(input, output, session) {
                                  input$pitch_color, ',')),
                                pitch_axisLabel = input$pitch_axisLabel,
                                pitch_plotOnSpec = input$pitch_plotOnSpec,
+                               pitch_highlight = pitchHighlight_args(),
                                formant_plotType = input$formant_plotType,
                                formant_freqRange = c(
                                  as.numeric(input$formant_freqRangeMin),
@@ -569,8 +749,10 @@ server <- function(input, output, session) {
                                formant_maxN = input$formant_maxN,
                                formant_color = unlist(strsplit(
                                  input$formant_color, ',')),
+                               formant_number = input$formant_number,
                                formant_axisLabel = input$formant_axisLabel,
                                formant_plotOnSpec = input$formant_plotOnSpec,
+                               formant_highlight = formantHighlight_args(),
                                intensity_range = intensity_range(),
                                intensity_minPitch = as.numeric(
                                  input$intensity_minPitch),
@@ -578,12 +760,14 @@ server <- function(input, output, session) {
                                  input$intensity_color, ',')),
                                intensity_axisLabel = input$intensity_axisLabel,
                                intensity_plotOnSpec = input$intensity_plotOnSpec,
+                               intensity_highlight = intensityHighlight_args(),
                                font = as.numeric(input$fontFace),
                                font.axis = as.numeric(input$fontFace),
                                family = input$fontFamily,
                                col = input$globalColor,
                                col.axis = input$globalColor,
                                bg = input$bgColor,
+                               highlight = highlight_args(),
                                draw_arrow = arrow_args(),
                                draw_rectangle = rect_args(),
                                annotate = annot_args()

@@ -24,23 +24,29 @@ specplot(
   pitch_freqRange = NULL,
   pitch_axisLabel = NULL,
   pitch_color = "black",
+  pitch_highlight = NULL,
   formant_plotOnSpec = FALSE,
   fm = NULL,
   formant_plotType = "speckle",
   formant_dynamicRange = 30,
   formant_color = "black",
+  formant_highlight = NULL,
   intensity_plotOnSpec = FALSE,
   it = NULL,
   intensity_range = NULL,
   intensity_axisLabel = "Intensity (dB)",
   intensity_color = "black",
+  intensity_highlight = NULL,
   tgbool = FALSE,
   lines = NULL,
   focusTierColor = "black",
   focusTierLineType = "dotted",
   ind = NULL,
   min_max_only = TRUE,
-  axisLabel = "Frequency (Hz)"
+  highlight = NULL,
+  axisLabel = "Frequency (Hz)",
+  drawSize = 1,
+  speckleSize = 1
 )
 }
 \arguments{
@@ -73,7 +79,13 @@ plotting parameters it is a good idea to choose a smaller value.}
 
 \item{windowShape}{String giving the name of the window shape to be applied
 to the signal when generating spectrograms. Default is \code{Gaussian}; other
-options are \code{square}, \code{Hamming}, \code{Bartlett}, or \code{Hanning}.}
+options are \code{square}, \code{Hamming}, \code{Bartlett}, \code{Hanning}, or \code{Blackman}.
+Note that the Gaussian window function provided by the \code{phonTools} package
+and used in \code{praatpicture()} does not have the same properties as the
+Gaussian window function used for spectral estimation in Praat; plotting
+a simple sine wave with high dynamic range will produce sidelobes in
+\code{praatpicture()} but not in Praat. It's recommended to use Blackman windows
+instead if you have this problem.}
 
 \item{colors}{Vector of strings giving the names of colors to be used
 for plotting the spectrogram; default is \code{c('white', 'black')}. The first
@@ -109,6 +121,15 @@ axis label will depend on the scale.}
 to be used for plotting pitch. Default is \code{'black'}. If a vector of two
 strings is passed, the second color will be used for background highlighting.}
 
+\item{pitch_highlight}{Named list giving parameters for differential
+highlighting of pitch based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the optional arguments
+\code{color} (string or vector of strings, see \code{pitch_color}),
+\code{drawSize} or \code{speckleSize} (both numeric).}
+
 \item{formant_plotOnSpec}{Boolean; should formants be plotted on top of
 spectrogram? Default is \code{FALSE}.}
 
@@ -135,6 +156,15 @@ half will be used for background highlighting. If the length of this vector
 is one more than the number of formants plotted, the last string will
 be used for background highlighting.}
 
+\item{formant_highlight}{Named list giving parameters for differential
+highlighting of formants based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the optional arguments
+\code{color} (string or vector of strings, see \code{formant_color}),
+\code{drawSize} or \code{speckleSize} (both numeric).}
+
 \item{intensity_plotOnSpec}{Boolean; should intensity be plotted on top of
 spectrogram? Default is \code{FALSE}.}
 
@@ -151,6 +181,15 @@ the y-axis when plotting intensity. Default is \code{Intensity (dB)}.}
 color to be used for plotting intensity. Default is \code{'black'}. If a vector of
 two strings is passed, the second color will be used for background
 highlighting.}
+
+\item{intensity_highlight}{Named list giving parameters for differential
+highlighting of the intensity contour based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the optional arguments
+\code{color} (string or vector of strings, see \code{intensity_color}) and
+\code{drawSize} (integer).}
 
 \item{tgbool}{Logical; should dotted lines be plotted corresponding to
 locations in a TextGrid? Default is \code{FALSE}.}
@@ -176,8 +215,25 @@ on the y-axis? Default is \code{TRUE}. Can also be a logical vector if some but
 not all plot components should have minimum and maximum values on the y-axis.
 Ignored for TextGrid component.}
 
+\item{highlight}{Named list giving parameters for differential
+highlighting of the spectrogram based on the time domain. This list
+should contain information about which parts of the plot to highlight, either
+done with the \code{start} and \code{end} arguments which must be numbers or numeric
+vectors, or using the \code{tier} and \code{label} arguments to highlight based on
+information in a plotted TextGrid. Further contains the argument
+\code{colors} (vector of strings, see \code{colors}).}
+
 \item{axisLabel}{String giving the name of the label to print along the
 y-axis when plotting a spectrogram. Default is \code{Frequency (Hz)}.}
+
+\item{drawSize}{Number indicating the line width of plot components where
+the \verb{_plotType} is \code{'draw'} (i.e., pitch, formants, or intensity rendered as
+line plots). Default is \code{1}. Controls the \code{lwd} argument of
+\link[graphics:lines]{graphics::lines}.}
+
+\item{speckleSize}{Number indicating the point size of plot components where
+the \verb{_plotType} is \code{'speckle'} (i.e. pitch or formants rendered as point
+plots). Default is \code{1}. Controls the \code{cex} arguments of \link[graphics:points]{graphics::points}.}
 }
 \value{
 No return values, called internally by \link{praatpicture} and sibling
